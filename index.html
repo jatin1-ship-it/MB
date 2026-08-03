@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>For You — Friendship Day</title>
+  <style>
+    :root { 
+      --gold:#ffd54f; 
+      --ink:#000; 
+      --paper:#fff; 
+      --muted:rgba(255,255,255,.62); 
+      --line:rgba(255,255,255,.13); 
+      --glass:rgba(255,255,255,.075); 
+    }
+    * { box-sizing:border-box; } 
+    html,body { margin:0; min-height:100%; background:#000; color:#fff; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif; }
+    body { overflow-x:hidden; } 
+    button, textarea { font:inherit; -webkit-tap-highlight-color:transparent; }
+    
+    /* Background Ambient Orbs */
+    .ambient { position:fixed; inset:0; overflow:hidden; pointer-events:none; background:radial-gradient(circle at 18% 15%,rgba(255,213,79,.12),transparent 24rem),radial-gradient(circle at 82% 85%,rgba(255,213,79,.08),transparent 24rem); }
+    .orb { position:absolute; width:24rem; height:24rem; border-radius:50%; background:rgba(255,213,79,.09); filter:blur(70px); animation:drift 11s ease-in-out infinite alternate; }
+    .orb:nth-child(2){ width:18rem; height:18rem; right:-4rem; top:18%; animation-delay:-5s; }
+    .orb:nth-child(3){ left:25%; bottom:-9rem; animation-delay:-8s; }
+    @keyframes drift { to { transform:translate(5rem,-3rem) scale(1.12); } }
+
+    main { min-height:100svh; display:grid; place-items:center; padding:20px; position:relative; }
+    .deck { width:min(760px,100%); min-height:min(740px,calc(100svh - 40px)); display:grid; place-items:center; position:relative; }
+    
+    .slide { width:100%; display:none; text-align:center; animation:enter .65s cubic-bezier(.2,.8,.2,1) both; }
+    .slide.active { display:block; }
+    @keyframes enter { from { opacity:0; transform:translateY(24px) scale(.985); filter:blur(8px); } to { opacity:1; transform:none; filter:none; } }
+
+    .eyebrow { color:var(--gold); text-transform:uppercase; letter-spacing:.17em; font-size:.69rem; font-weight:700; margin-bottom:20px; }
+    .hero h1, .question h2, .final-title { margin:0; font-size:clamp(2.3rem,6.5vw,5.2rem); letter-spacing:-.065em; line-height:1.02; }
+    .hero p { margin:22px 0 38px; color:var(--muted); font-size:clamp(1.1rem,2.5vw,1.45rem); }
+    .gold { color:var(--gold); }
+
+    .btn { min-width:174px; border:1px solid rgba(255,213,79,.65); color:#111; background:var(--gold); border-radius:999px; padding:15px 25px; font-weight:700; cursor:pointer; box-shadow:0 12px 32px rgba(255,213,79,.22); transition:transform .25s,box-shadow .25s,background .25s; }
+    .btn:hover { transform:translateY(-3px); box-shadow:0 18px 45px rgba(255,213,79,.32); }
+    .btn:active { transform:scale(.97); }
+    .btn:disabled { opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    /* Question Styles */
+    .question { max-width:680px; margin:auto; }
+    .question h2 { font-size:clamp(1.8rem,4.8vw,3.6rem); margin-bottom:28px; }
+    .quote { color:var(--gold); font-style:italic; display:block; margin-top:8px; }
+    .options { display:grid; gap:11px; text-align:left; margin-bottom:28px; }
+    .option { border:1px solid var(--line); color:white; background:var(--glass); backdrop-filter:blur(18px); border-radius:20px; padding:17px 20px; cursor:pointer; font-size:1.02rem; transition:.28s; }
+    .option:hover, .option.selected { background:rgba(255,213,79,.14); border-color:rgba(255,213,79,.75); transform:translateX(5px); }
+    .option.selected:after { content:'✓'; float:right; color:var(--gold); font-weight:700; }
+
+    /* Text Input Option for Q10 */
+    .custom-textarea { width:100%; min-height:120px; background:var(--glass); border:1px solid var(--line); border-radius:20px; padding:16px 20px; color:#fff; font-size:1.02rem; outline:none; resize:none; backdrop-filter:blur(18px); transition:.28s; margin-bottom:24px; }
+    .custom-textarea:focus { border-color:rgba(255,213,79,.75); background:rgba(255,213,79,.06); }
+
+    /* Loading Card */
+    .loading-card, .report, .photo-card { background:linear-gradient(145deg,rgba(255,255,255,.105),rgba(255,255,255,.035)); border:1px solid var(--line); backdrop-filter:blur(22px); border-radius:32px; padding:clamp(25px,6vw,52px); box-shadow:0 30px 80px rgba(0,0,0,.45); }
+    .loader { width:52px; height:52px; border:3px solid rgba(255,255,255,.15); border-top-color:var(--gold); border-radius:50%; margin:0 auto 24px; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loading-card h2 { font-size:clamp(2rem,5vw,3.5rem); margin:0 0 10px; letter-spacing:-.05em; }
+    .loading-card p { color:var(--muted); }
+    .progress { height:8px; border-radius:999px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:30px; }
+    .progress i { display:block; height:100%; width:0; background:var(--gold); border-radius:999px; transition:width .1s linear; }
+    .percent { color:var(--gold); font-size:.83rem; font-weight:700; margin-top:10px; }
+
+    /* Report Card */
+    .report { text-align:left; }
+    .xmark { font-size:3rem; line-height:1; margin-bottom:15px; }
+    .report h2 { font-size:clamp(2rem,5vw,3.65rem); letter-spacing:-.06em; margin:0; }
+    .report>p { color:var(--muted); line-height:1.55; font-size:1.08rem; }
+    .stats { margin:28px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .stat { display:flex; justify-content:space-between; padding:15px 0; font-size:1.03rem; }
+    .stat strong { color:var(--gold); }
+    .report .btn { margin-top:9px; }
+
+    /* Photo Card */
+    .photo-wrap { max-width:650px; margin:auto; }
+    .photo-card { padding:11px; }
+    .photo-card img { width:100%; max-height:55svh; object-fit:cover; display:block; border-radius:23px; filter:saturate(.88) contrast(1.06); }
+    .caption { font-size:clamp(1.1rem,2.5vw,1.38rem); line-height:1.5; color:var(--muted); margin:22px auto 28px; max-width:560px; }
+    .caption strong { color:white; font-weight:600; }
+
+    /* Typed Message Card */
+    .message { text-align:left; max-width:720px; margin:auto; }
+    .message-card { padding:clamp(26px,6vw,55px); border:1px solid var(--line); border-radius:32px; background:rgba(255,255,255,.055); backdrop-filter:blur(24px); }
+    .message-card h1 { font-size:clamp(2.4rem,6vw,4.5rem); letter-spacing:-.065em; margin:0 0 27px; }
+    .typed { white-space:pre-line; color:rgba(255,255,255,.82); font-size:clamp(1rem,2.1vw,1.12rem); line-height:1.7; min-height:260px; }
+    .caret { display:inline-block; width:2px; height:1.1em; background:var(--gold); vertical-align:-.16em; margin-left:3px; animation:blink .8s steps(2) infinite; }
+    @keyframes blink { 50% { opacity:0; } }
+    .message .btn { margin-top:28px; }
+    .message .btn[hidden] { display:none; }
+
+    /* Final Screen & Confetti */
+    .last h1 { font-size:clamp(3rem,8vw,5.8rem); letter-spacing:-.075em; margin:0; }
+    .last p { color:var(--muted); font-size:clamp(1.08rem,2.6vw,1.35rem); line-height:1.55; margin:25px auto 32px; max-width:540px; }
+    .last .btn { display:inline-flex; gap:9px; align-items:center; justify-content:center; }
+    .confetti { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+    .confetti i { position:absolute; width:8px; height:14px; background:var(--gold); top:-20px; animation:fall 3s linear forwards; }
+    @keyframes fall { to { transform:translate(var(--x),110svh) rotate(720deg); opacity:.2; } }
+
+    /* Bottom Stepper */
+    .stepper { position:absolute; bottom:0; left:50%; transform:translateX(-50%); display:flex; gap:6px; }
+    .dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.25); transition:.3s; }
+    .dot.on { width:22px; border-radius:9px; background:var(--gold); }
+
+    @media(max-width:560px){
+      main { padding:16px; }
+      .deck { min-height:calc(100svh - 32px); }
+      .option { padding:15px 16px; border-radius:17px; }
+      .report, .loading-card, .message-card { border-radius:26px; }
+      .typed { line-height:1.61; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient"><i class="orb"></i><i class="orb"></i><i class="orb"></i></div>
+  <main>
+    <div class="deck" id="deck">
+      
+      <!-- Intro Slide -->
+      <section class="slide hero active">
+        <div class="eyebrow">A small Friendship Day surprise</div>
+        <h1>Aaj sirf <span class="gold">2 minute</span><br>chura raha hoon...</h1>
+        <p>Baaki sab tumhara. 😊</p>
+        <button class="btn" data-next>Continue <span>→</span></button>
+      </section>
+      
+      <!-- Question 1 -->
+      <section class="slide question" data-question="Ek guess karo... ye surprise kitne minute ka hoga?">
+        <div class="eyebrow">01 / 10</div>
+        <h2>Ek guess karo...<br>ye surprise kitne minute ka hoga?</h2>
+        <div class="options">
+          <button class="option">30 Seconds</button>
+          <button class="option">2 Minutes</button>
+          <button class="option">5 Minutes</button>
+          <button class="option">Pata nahi, dekhte hain!</button>
+        </div>
+        <button class="btn q-next-btn" disabled>Next <span>→</span></button>
+      </section>
+
+      <!-- Question 2 -->
+      <section class="slide question" data-question="Agar main achanak call karke bolun ki 'Mujhe madad chahiye' to aapka jawab kya hoga?">
+        <div class="eyebrow">02 / 10</div>
+        <h2>Agar main achanak call karke bolun ki<span class="quote">“Mujhe madad chahiye”</span>to aapka jawab kya hoga?</h2>
+        <div class="options">
+          <button class="option">Ghar me kaam hai.</button>
+          <button class="option">Mere paas time nahi hai.</button>
+          <button class="option">Turant “Haan” bolungi.</button>
+          <button class="option">Gaadi nahi hai.</button>
+        </div>
+        <button class="btn q-next-btn" disabled>Next <span>→</span></button>
+      </section>
+
+      <!-- Question 3 -->
+      <section class="slide question" data-question="Hamari bhai-behen wali dosti ke liye ek word?">
+        <div class="eyebrow">03 / 10</div>
+        <h2>Hamari bhai-behen wali dosti ke liye ek word...?</h2>
+        <div class="options">
+          <button class="option">Trust</button>
+          <button class="option">Family</button>
+          <button class="option">Support</button>
+          <button class="option">Pagalpanti</button>
+        </div>
+        <button class="btn q-next-btn" disabled>Next <span>→</span></button>
+      </section>
+
+      <!-- Question 4 -->
+      <section class="slide question" data-question="Agar main achanak se gayab ho jaun to?">
+        <div class="eyebrow">04 / 10</div>
+        <h2>Agar main achanak se gayab ho jaun to...?</h2>
+        <div class="options">
+          <button class="option">Sabse pehle call karungi.</button>
+          <button class="option">Ghar aa jaungi.</button>
+          <button class="option">Dhoondhne nikal jaungi.</button>
+          <button class="option">Achha hai, shanti milegi.</button>
+        </div>
+        <button class="btn q-next-btn" disabled>Next <span>→</span></button>
+      </section>
+
+      <!-- Question 5 -->
+      <section class="slide question" data-question="Aapko mujh par kitna trust hai?">
+        <div class="eyebrow">05 / 10</div>
+        <h2>Aapko mujh par kitna trust hai?</h2>
+        <div class="options">
+          <button class="option">100%</button>
+          <button class="option">80%</button>
+          <button class="option">50%</button>
+          <button class="option">Infinite</button>
+        </div>
+        <button class="btn q-next-btn" disabled>Next <span>→</span></button>
+      </section>
+
+      <!-- Question 6 -->
+      <section class="slide question" data-question="Hamari dosti kab se start hui?">
+        <div class="eyebrow">06 / 10</div>
+        <h2>Hamari dosti kab se start hui?</h2>
+        <div class="options">
+          <button class="option">Shaadi se pehle</button>
+          <button class="option">Shaadi ke baad</button>
+          <button class="option">1-2 year pehle</button>
+          <button class="option">Pata nahi</button>
+        </div>
+        <button class="btn q-next-btn" disabled>Next <span>→</span></button>
+      </section>
+
+      <!-- Question 7 -->
+      <section class="slide question" data-question="Kisi se ladai ho jaye to aap kiska saath dogi?">
+        <div class="eyebrow">07 / 10</div>
+        <h2>Kisi se ladai ho jaye to aap kiska saath dogi?</h2>
+        <div class="options">
+          <button class="option">Saamne kaun hai woh dekhungi</button>
+          <button class="option">Sirf dekhungi</button>
+          <button class="option">Bina soche tera saath dungi</button>
+          <button class="option">Sharm ke bahane nahi aaungi</button>
+        </div>
+        <button class="btn q-next-btn" disabled>Next <span>→</span></button>
+      </section>
+
+      <!-- Question 8 -->
+      <section class="slide question" data-question="Agar main bhi tumhara sagga bhai hota, to tumhe kaisa lagta?">
+        <div class="eyebrow">08 / 10</div>
+        <h2>Mujhe pata hai tumhara ek sagga bhai hai jo tumhare liye khaas hai. Agar main bhi tumhara sagga bhai hota, to tumhe kaisa lagta?</h2>
+        <div class="options">
+          <button class="option">Mujhe bahut khushi hoti.</button>
+          <button class="option">Mujhe ek aur apna bhai mil jata.</button>
+          <button class="option">Main tujhe jhel hi nahi paati.</button>
+          <button class="option">Mujhe lagta meri family aur complete ho gayi.</button>
+        </div>
+        <button class="btn q-next-btn" disabled>Next <span>→</span></button>
+      </section>
+
+      <!-- Question 9 -->
+      <section class="slide question" data-question="Agar Jatin ko ek award dena ho, to kis category ka doge?">
+        <div class="eyebrow">09 / 10</div>
+        <h2>Agar Jatin ko ek award dena ho, to kis category ka doge? 🏆</h2>
+        <div class="options">
+          <button class="option">Best Friend of the Year</button>
+          <button class="option">Most Trustworthy Person</button>
+          <button class="option">Comedy King</button>
+          <button class="option">Sabse Bada Nautanki</button>
+        </div>
+        <button class="btn q-next-btn" disabled>Next <span>→</span></button>
+      </section>
+
+      <!-- Question 10 (Text Box Question) -->
+      <section class="slide question" data-question="Jatin ko 10 mein se kitne marks doge aur kyun?">
+        <div class="eyebrow">10 / 10</div>
+        <h2>Jatin ko 10 mein se kitne marks doge aur kyun? ✍️</h2>
+        <textarea class="custom-textarea" id="q10-text" placeholder="Apne marks aur wajah yahan likho..."></textarea>
+        <button class="btn q-next-btn" id="q10-btn" disabled>Finish Quiz <span>→</span></button>
+      </section>
+
+      <!-- Gallery Loader -->
+      <section class="slide">
+        <div class="loading-card">
+          <div class="loader"></div>
+          <h2>Searching Gallery...</h2>
+          <p>Scanning Memories...</p>
+          <div class="progress"><i id="bar"></i></div>
+          <div class="percent" id="percent">0%</div>
+        </div>
+      </section>
+
+      <!-- No Photo Found Screen -->
+      <section class="slide">
+        <div class="report">
+          <div class="xmark">❌</div>
+          <h2>No Photo Found!</h2>
+          <p>Photo dhoondh rahi ho?<br>Aaj tak hum dono ne saath me ek bhi photo nahi khinchwayi...</p>
+          <div class="stats">
+            <div class="stat"><span>Together Photos</span><strong>0</strong></div>
+            <div class="stat"><span>Friendship</span><strong>∞</strong></div>
+            <div class="stat"><span>Camera Timing</span><strong>0/100</strong></div>
+          </div>
+          <p><strong>Dosti full HD hai...</strong><br>bas gallery abhi tak empty hai!</p>
+          <button class="btn" data-next>Continue →</button>
+        </div>
+      </section>
+
+      <!-- Photo Card Screen -->
+      <section class="slide">
+        <div class="photo-wrap">
+          <div class="photo-card">
+            <img src="bm.jpg" alt="Friend Photo">
+          </div>
+          <p class="caption">
+            <strong>Saath wali photo abhi tak nahi hai... 📸</strong><br>
+            Par dua hai ki ye smile hamesha aisi hi rahe. 😊🌼
+          </p>
+          <button class="btn" data-next>Continue →</button>
+        </div>
+      </section>
+
+      <!-- Heartfelt Message with Typing Effect -->
+      <section class="slide message">
+        <div class="message-card">
+          <div class="eyebrow">From the heart</div>
+          <h1>For <span class="gold">you.</span></h1>
+          <div class="typed" id="typed"></div>
+          <button class="btn" id="messageNext" hidden>Continue →</button>
+        </div>
+      </section>
+
+      <!-- WhatsApp Share Screen -->
+      <section class="slide last">
+        <div class="eyebrow">One last thing</div>
+        <h1>Before You Go...</h1>
+        <p>Bas ek chhoti si request...<br><br>Agar ye surprise pasand aaya ho,<br>to apne answers mujhe WhatsApp par zarur bhej dena.</p>
+        <button class="btn" id="whatsapp">📲 Send My Answers</button>
+      </section>
+
+      <!-- Dynamic Navigation Stepper -->
+      <div class="stepper" id="stepper"></div>
+    </div>
+  </main>
+
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    const questions = [...document.querySelectorAll('[data-question]')];
+    const answers = []; 
+    let current = 0;
+
+    const message = `\n\nTum sirf meri friend nahi ho, balki meri behen jaisi ho. Isi liye tum meri life me sirf ek dost nahi, meri family ka hissa ho.\n\nShayad humne aaj tak saath me ek photo nahi khinchwayi, lekin yaadein aur apnapan kisi photo se kam nahi hote.\n\nEk baat hamesha yaad rakhna...\n\nZindagi me kabhi bhi kisi cheez ki zarurat pade, to bina soche-samjhe sabse pehla call mujhe kar dena. Chahe baat aapki ho ya Shrishu ki, chahe chhoti si madad chahiye ho ya sirf kisi apne ka saath... ek call zarur karna. Main hamesha aapke saath rahunga.\n\nAur ek promise...\n\nKhud ka hamesha khayal rakhna aur bina wajah zyada udaas mat hona. Aapki muskaan hamesha aisi hi bani rahe... bas Mahadev ko dil se yehi dua hai.\n\nBas itni si dua hai ki aap, Mehul aur Shrishu hamesha khush raho, haste raho aur Mahadev aap tino ko hamesha dher saari khushiyan de.\n\nLikhna chahun to bahut kuch likh sakta hoon... lekin aaj ke din maine aapke sirf 2 minute liye hain, isliye itna hi kaafi hai 😂.\n\nThank you so much for everything.\n\nAaj tak sath diya uske liye thank yo so so much , By By \n\nHappy Friendship Day 💛`;
+
+    const stepper = document.querySelector('#stepper'); 
+    
+    function dots() {
+      stepper.innerHTML = '';
+      let n = slides.length;
+      for (let i = 0; i < n; i++) {
+        let d = document.createElement('i');
+        d.className = 'dot ' + (i === current ? 'on' : '');
+        stepper.append(d);
+      }
+    }
+    dots();
+
+    function go(n) {
+      slides[current].classList.remove('active');
+      current = n;
+      slides[current].classList.add('active');
+      dots();
+      
+      // Index triggers for post-quiz animations
+      if (current === 11) load();             // Gallery Searching Loader
+      if (current === 14) typeMessage();      // Heartfelt Message Typing Effect
+      if (current === 15) confetti();         // Confetti animation
+    }
+
+    // Generic Next Button Listener
+    document.querySelectorAll('[data-next]').forEach(b => b.onclick = () => go(current + 1));
+
+    // Question Selection & Next Button Activation
+    questions.forEach((q, qi) => {
+      const nextBtn = q.querySelector('.q-next-btn');
+      
+      // Standard Multiple Choice Questions (Q1 to Q9)
+      q.querySelectorAll('.option').forEach(b => {
+        b.onclick = () => {
+          q.querySelectorAll('.option').forEach(x => x.classList.remove('selected'));
+          b.classList.add('selected');
+          answers[qi] = b.textContent.replace('✓', '').trim();
+          nextBtn.disabled = false;
+        };
+      });
+
+      nextBtn.onclick = () => go(current + 1);
+    });
+
+    // Special Handling for Question 10 (Text Input)
+    const q10Text = document.querySelector('#q10-text');
+    const q10Btn = document.querySelector('#q10-btn');
+
+    q10Text.oninput = () => {
+      const val = q10Text.value.trim();
+      answers[9] = val || "No response written";
+      q10Btn.disabled = val.length === 0;
+    };
+
+    // Simulated Progress Bar Loader
+    function load() {
+      let b = document.querySelector('#bar');
+      let p = document.querySelector('#percent');
+      let start = performance.now();
+      
+      requestAnimationFrame(function tick(t) {
+        let x = Math.min(100, Math.round((t - start) / 2700 * 100));
+        b.style.width = x + '%';
+        p.textContent = x + '%';
+        if (x < 100) {
+          requestAnimationFrame(tick);
+        } else {
+          setTimeout(() => go(12), 500);
+        }
+      });
+    }
+
+    // Typing Effect Logic
+    let typedOnce = false;
+    function typeMessage() {
+      if (typedOnce) return;
+      typedOnce = true;
+      let el = document.querySelector('#typed');
+      let i = 0;
+      let timer = setInterval(() => {
+        el.textContent = message.slice(0, ++i);
+        el.scrollTop = el.scrollHeight;
+        if (i >= message.length) {
+          clearInterval(timer);
+          el.insertAdjacentHTML('beforeend', '<span class="caret"></span>');
+          document.querySelector('#messageNext').hidden = false;
+        }
+      }, 8);
+    }
+
+    document.querySelector('#messageNext').onclick = () => go(15);
+
+    // Celebration Confetti
+    function confetti() {
+      let c = document.createElement('div');
+      c.className = 'confetti';
+      for (let i = 0; i < 70; i++) {
+        let e = document.createElement('i');
+        e.style.left = Math.random() * 100 + '%';
+        e.style.setProperty('--x', (Math.random() - .5) * 300 + 'px');
+        e.style.animationDelay = Math.random() * 1.3 + 's';
+        e.style.background = ['#ffd54f', '#fff', '#e8b93c'][i % 3];
+        c.append(e);
+      }
+      document.body.append(c);
+      setTimeout(() => c.remove(), 4500);
+    }
+
+    // WhatsApp Direct Answer Link
+    document.querySelector('#whatsapp').onclick = () => {
+      let lines = [
+        '🌼 Friendship Day Answers 🌼',
+        '',
+        ...questions.map((q, i) => `Q${i + 1}: ${answers[i] || '—'}`),
+        '',
+        'Surprise bahut achha laga 😊🌼'
+      ];
+      window.open('https://wa.me/?text=' + encodeURIComponent(lines.join('\n')), '_blank');
+    };
+  </script>
+</body>
+</html>
